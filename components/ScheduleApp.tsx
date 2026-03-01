@@ -174,20 +174,22 @@ export default function ScheduleApp() {
     const current = newDocs[key];
     
     // 1. Se o tipo for Consulta ou Estudante, fazemos o ciclo: Manhã -> Tarde -> Inteiro -> Apagar
+    // 1. Se o tipo for Consulta ou Estudante, fazemos o ciclo: Manhã -> Tarde -> Inteiro -> Apagar
     if (selectedType === 'Consulta Médica' || selectedType === 'Trabalhador-Estudante') {
       if (!current || (typeof current === 'object' && (current as any).type !== selectedType)) {
         newDocs[key] = { type: selectedType, period: 'Morning' } as any;
       } else if (typeof current === 'object' && (current as any).period === 'Morning') {
         newDocs[key] = { type: selectedType, period: 'Afternoon' } as any;
-      } else if (typeof current === 'object' && current.period === 'Afternoon') {
+      } else if (typeof current === 'object' && (current as any).period === 'Afternoon') {
         newDocs[key] = { type: selectedType, period: 'Full' } as any;
       } else {
         delete newDocs[key];
       }
-    } 
+    }
     // 2. Para Banco de Horas ou Tolerância, pedimos uma nota
     else if (selectedType === 'Banco de Horas' || selectedType === 'Tolerância de Ponto' || selectedType === 'Gozo Feriado') {
-      if (current && (typeof current === 'string' ? current : current.type) === selectedType) {
+      const currentType = typeof current === 'object' ? (current as any).type : current;
+      if (current && currentType === selectedType) {
         delete newDocs[key];
       } else {
         const nota = prompt(`Motivo para ${selectedType}:`, "");
@@ -196,7 +198,8 @@ export default function ScheduleApp() {
     }
     // 3. Comportamento normal para o resto
     else {
-      if (current && (typeof current === 'string' ? current : current.type) === selectedType) {
+      const currentType = typeof current === 'object' ? (current as any).type : current;
+      if (current && currentType === selectedType) {
         delete newDocs[key];
       } else {
         newDocs[key] = selectedType;
@@ -280,8 +283,7 @@ export default function ScheduleApp() {
         groupsByTime,
       };
     });
-  }, [scheduleData, currentMonth, daysArray, getStatus]); // Adicionámos estes dois últimos
-
+  }, [scheduleData, currentMonth, daysArray, getStatus]);
   return (
     <div className="flex h-screen bg-[#F8FAFC] text-slate-900 font-sans overflow-hidden">
       {/* TOAST NOTIFICATION */}
