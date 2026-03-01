@@ -678,12 +678,20 @@ export default function ScheduleApp() {
   // 1. Procuramos os dados brutos no scheduleData
   const m = String(currentMonth + 1).padStart(2, '0');
   const d = String(day).padStart(2, '0');
-  const rawStatus = scheduleData[`${member}-2026-${m}-${d}`];
+  const rawStatus = (scheduleData as any)[`${member}-2026-${m}-${d}`];
 
-  // 2. Normalizamos: se for objeto usamos as propriedades, se for string usamos a string
-  const type = typeof rawStatus === 'object' ? rawStatus.type : (rawStatus || 'Trabalho');
-  const period = typeof rawStatus === 'object' ? rawStatus.period : 'Full';
-  const note = typeof rawStatus === 'object' ? rawStatus.note : null;
+  // 2. Normalizamos com "as any" para evitar erro de 'property type does not exist on never'
+  const type = typeof rawStatus === 'object' && rawStatus !== null 
+    ? (rawStatus as any).type 
+    : (rawStatus || 'Trabalho');
+    
+  const period = typeof rawStatus === 'object' && rawStatus !== null 
+    ? (rawStatus as any).period 
+    : 'Full';
+    
+  const note = typeof rawStatus === 'object' && rawStatus !== null 
+    ? (rawStatus as any).note 
+    : null;
 
   const isToday = isThisMonth && day === currentDayNumber;
   const isHighlighted = !highlightFilter || highlightFilter === type;
@@ -698,7 +706,6 @@ export default function ScheduleApp() {
     >
       <motion.div
         whileHover={!isPrintMode && !isLocked ? { scale: 1.05, zIndex: 10 } : {}}
-        // O title faz aparecer a nota quando deixas o rato parado por cima
         title={note ? `Nota: ${note}` : ABSENCE_CONFIG[type as AbsenceType]?.label}
         className={`h-full flex items-center justify-center text-[10px] font-black border transition-all duration-300 relative overflow-hidden ${
           type !== 'Trabalho'
@@ -707,7 +714,6 @@ export default function ScheduleApp() {
         } ${
           !isHighlighted ? 'opacity-5 scale-[0.85] grayscale' : 'opacity-100'
         } ${
-          // AJUSTE DE TAMANHO PARA PERÍODOS PARCIAIS
           period === 'Morning' ? 'w-[65%] mr-auto rounded-l-xl rounded-r-none border-r-0 shadow-inner' : 
           period === 'Afternoon' ? 'w-[65%] ml-auto rounded-r-xl rounded-l-none border-l-0 shadow-inner' : 
           'w-full rounded-xl'
@@ -715,7 +721,6 @@ export default function ScheduleApp() {
       >
         {type !== 'Trabalho' ? ABSENCE_CONFIG[type as AbsenceType].short : ''}
         
-        {/* INDICADOR VISUAL DE NOTA (Um pontinho preto discreto no canto) */}
         {note && (
           <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-current opacity-30 rounded-bl-full" />
         )}
