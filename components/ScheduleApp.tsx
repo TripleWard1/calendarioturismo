@@ -70,6 +70,15 @@ const COLORS: Record<AbsenceType, string> = {
     'bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-600 border-blue-200 shadow-sm shadow-blue-100/20',
   'Serviço Externo':
     'bg-slate-100 text-slate-600 border-slate-200 shadow-inner',
+  'Baixa Médica':
+    'bg-gradient-to-br from-red-50 to-rose-50 text-red-600 border-red-200 shadow-sm shadow-red-100/20',
+  'Trabalhador-Estudante':
+    'bg-gradient-to-br from-lime-50 to-green-50 text-lime-600 border-lime-200 shadow-sm shadow-lime-100/20',
+  'Consulta Médica':
+    'bg-gradient-to-br from-cyan-50 to-sky-50 text-cyan-600 border-cyan-200 shadow-sm shadow-cyan-100/20',
+    // No teu objeto COLORS:
+  'Banco de Horas': 'bg-gradient-to-br from-yellow-50 to-amber-100 text-amber-700 border-yellow-300 shadow-sm shadow-yellow-100/20',
+  'Tolerância de Ponto': 'bg-gradient-to-br from-fuchsia-50 to-pink-50 text-fuchsia-600 border-fuchsia-200 shadow-sm shadow-fuchsia-100/20',
 };
 
 const MEMBER_HOURS: Record<string, { am: string; pm: string }> = {
@@ -151,27 +160,49 @@ export default function ScheduleApp() {
 
   const toggleDayStatus = (member: string, day: number) => {
     if (isLocked) {
-      showToast('Escala bloqueada! Desativa o cadeado para editar.', 'error');
+      showToast('Escala bloqueada!', 'error');
       return;
     }
-
+  
     setHistory((prev) => [scheduleData, ...prev.slice(0, 19)]);
-
+  
     const m = String(currentMonth + 1).padStart(2, '0');
     const d = String(day).padStart(2, '0');
     const key = `${member}-2026-${m}-${d}`;
     const newDocs = { ...scheduleData };
-
-    // --- MUDANÇA AQUI ---
-    // Se o que já lá está é IGUAL ao que tenho selecionado, então apago (volta a Trabalho)
-    if (newDocs[key] === selectedType) {
-      delete newDocs[key];
-    } else {
-      // Se for diferente ou se for Trabalho, pinta com o novo tipo
-      newDocs[key] = selectedType;
+    
+    const current = newDocs[key];
+    
+    // 1. Se o tipo for Consulta ou Estudante, fazemos o ciclo: Manhã -> Tarde -> Inteiro -> Apagar
+    if (selectedType === 'Consulta Médica' || selectedType === 'Trabalhador-Estudante') {
+      if (!current || (typeof current === 'object' && current.type !== selectedType)) {
+        newDocs[key] = { type: selectedType, period: 'Morning' } as any;
+      } else if (typeof current === 'object' && current.period === 'Morning') {
+        newDocs[key] = { type: selectedType, period: 'Afternoon' } as any;
+      } else if (typeof current === 'object' && current.period === 'Afternoon') {
+        newDocs[key] = { type: selectedType, period: 'Full' } as any;
+      } else {
+        delete newDocs[key];
+      }
+    } 
+    // 2. Para Banco de Horas ou Tolerância, pedimos uma nota
+    else if (selectedType === 'Banco de Horas' || selectedType === 'Tolerância de Ponto' || selectedType === 'Gozo Feriado') {
+      if (current && (typeof current === 'string' ? current : current.type) === selectedType) {
+        delete newDocs[key];
+      } else {
+        const nota = prompt(`Motivo para ${selectedType}:`, "");
+        newDocs[key] = { type: selectedType, period: 'Full', note: nota || "" } as any;
+      }
     }
-    // --------------------
-
+    // 3. Comportamento normal para o resto
+    else {
+      if (current && (typeof current === 'string' ? current : current.type) === selectedType) {
+        delete newDocs[key];
+      } else {
+        newDocs[key] = selectedType;
+      }
+    }
+  
     setScheduleData(newDocs);
     saveToFirebase(newDocs);
   };
@@ -642,43 +673,54 @@ export default function ScheduleApp() {
                         )}
                       </td>
                       {daysArray.map((day) => {
-                        const status = getStatus(member, day);
-                        const isToday = isThisMonth && day === currentDayNumber;
-                        const isHighlighted =
-                          !highlightFilter || highlightFilter === status;
-                        return (
-                          <td
-                            key={day}
-                            onClick={() =>
-                              !isPrintMode && toggleDayStatus(member, day)
-                            }
-                            className={`flex-1 min-w-[36px] p-[3px] border-r border-slate-50 cursor-pointer relative ${
-                              isToday ? 'bg-blue-50/20' : ''
-                            }`}
-                          >
-                            <motion.div
-                              whileHover={
-                                !isPrintMode && !isLocked
-                                  ? { scale: 1.05, zIndex: 10 }
-                                  : {}
-                              }
-                              className={`h-full w-full rounded-xl flex items-center justify-center text-[10px] font-black border transition-all duration-300 ${
-                                status !== 'Trabalho'
-                                  ? COLORS[status]
-                                  : 'bg-transparent border-transparent'
-                              } ${
-                                !isHighlighted
-                                  ? 'opacity-5 scale-[0.85] grayscale'
-                                  : 'opacity-100'
-                              }`}
-                            >
-                              {status !== 'Trabalho'
-                                ? ABSENCE_CONFIG[status].short
-                                : ''}
-                            </motion.div>
-                          </td>
-                        );
-                      })}
+  // 1. Procuramos os dados brutos no scheduleData
+  const m = String(currentMonth + 1).padStart(2, '0');
+  const d = String(day).padStart(2, '0');
+  const rawStatus = scheduleData[`${member}-2026-${m}-${d}`];
+
+  // 2. Normalizamos: se for objeto usamos as propriedades, se for string usamos a string
+  const type = typeof rawStatus === 'object' ? rawStatus.type : (rawStatus || 'Trabalho');
+  const period = typeof rawStatus === 'object' ? rawStatus.period : 'Full';
+  const note = typeof rawStatus === 'object' ? rawStatus.note : null;
+
+  const isToday = isThisMonth && day === currentDayNumber;
+  const isHighlighted = !highlightFilter || highlightFilter === type;
+
+  return (
+    <td
+      key={day}
+      onClick={() => !isPrintMode && toggleDayStatus(member, day)}
+      className={`flex-1 min-w-[36px] p-[3px] border-r border-slate-50 cursor-pointer relative ${
+        isToday ? 'bg-blue-50/20' : ''
+      }`}
+    >
+      <motion.div
+        whileHover={!isPrintMode && !isLocked ? { scale: 1.05, zIndex: 10 } : {}}
+        // O title faz aparecer a nota quando deixas o rato parado por cima
+        title={note ? `Nota: ${note}` : ABSENCE_CONFIG[type as AbsenceType]?.label}
+        className={`h-full flex items-center justify-center text-[10px] font-black border transition-all duration-300 relative overflow-hidden ${
+          type !== 'Trabalho'
+            ? COLORS[type as AbsenceType]
+            : 'bg-transparent border-transparent'
+        } ${
+          !isHighlighted ? 'opacity-5 scale-[0.85] grayscale' : 'opacity-100'
+        } ${
+          // AJUSTE DE TAMANHO PARA PERÍODOS PARCIAIS
+          period === 'Morning' ? 'w-[65%] mr-auto rounded-l-xl rounded-r-none border-r-0 shadow-inner' : 
+          period === 'Afternoon' ? 'w-[65%] ml-auto rounded-r-xl rounded-l-none border-l-0 shadow-inner' : 
+          'w-full rounded-xl'
+        }`}
+      >
+        {type !== 'Trabalho' ? ABSENCE_CONFIG[type as AbsenceType].short : ''}
+        
+        {/* INDICADOR VISUAL DE NOTA (Um pontinho preto discreto no canto) */}
+        {note && (
+          <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-current opacity-30 rounded-bl-full" />
+        )}
+      </motion.div>
+    </td>
+  );
+})}
                       <td className="w-16 border-l border-slate-100 flex items-center justify-center font-black text-[11px] text-slate-400 group-hover:text-blue-600 transition-colors">
                         {daysArray.reduce(
                           (acc, d) =>
