@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-// --- NOVAS IMPORTAÇÕES FIREBASE ---
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
 
@@ -34,14 +33,13 @@ import {
   Lock,
   Unlock,
   Undo2,
+  MessageSquare,
 } from 'lucide-react';
 
-// --- CONFIGURAÇÃO FIREBASE ---
 const firebaseConfig = {
   apiKey: 'AIzaSyCY4SbHnB-yEKwk0wfG9yM4WNver0cLF2Y',
   authDomain: 'gestao-calendario-4ddba.firebaseapp.com',
-  databaseURL:
-    'https://gestao-calendario-4ddba-default-rtdb.europe-west1.firebasedatabase.app',
+  databaseURL: 'https://gestao-calendario-4ddba-default-rtdb.europe-west1.firebasedatabase.app',
   projectId: 'gestao-calendario-4ddba',
   storageBucket: 'gestao-calendario-4ddba.firebasestorage.app',
   messagingSenderId: '307690076999',
@@ -53,19 +51,19 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 const COLORS: Record<AbsenceType, string> = {
-  Trabalho: 'bg-slate-50/30 text-slate-400 border-slate-100/50 hover:bg-white hover:shadow-sm',
-  Folga: 'bg-gradient-to-br from-amber-50 to-orange-50 text-amber-600 border-amber-200 shadow-sm shadow-amber-100/20',
-  Férias: 'bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-600 border-emerald-200 shadow-sm shadow-emerald-100/20',
-  'Gozo Feriado': 'bg-gradient-to-br from-rose-50 to-red-50 text-rose-600 border-rose-200 shadow-sm shadow-rose-100/20',
-  'Visita Guiada': 'bg-gradient-to-br from-indigo-50 to-violet-50 text-indigo-600 border-indigo-200 shadow-sm shadow-indigo-100/20',
-  Feira: 'bg-gradient-to-br from-orange-50 to-yellow-50 text-orange-600 border-orange-200 shadow-sm shadow-orange-100/20',
-  Formação: 'bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-600 border-blue-200 shadow-sm shadow-blue-100/20',
-  'Serviço Externo': 'bg-slate-100 text-slate-600 border-slate-200 shadow-inner',
-  'Baixa Médica': 'bg-gradient-to-br from-red-50 to-rose-50 text-red-600 border-red-200 shadow-sm shadow-red-100/20',
-  'Trabalhador-Estudante': 'bg-gradient-to-br from-lime-50 to-green-50 text-lime-600 border-lime-200 shadow-sm shadow-lime-100/20',
-  'Consulta Médica': 'bg-gradient-to-br from-cyan-50 to-sky-50 text-cyan-600 border-cyan-200 shadow-sm shadow-cyan-100/20',
-  'Banco de Horas': 'bg-gradient-to-br from-yellow-50 to-amber-100 text-amber-700 border-yellow-300 shadow-sm shadow-yellow-100/20',
-  'Tolerância de Ponto': 'bg-gradient-to-br from-fuchsia-50 to-pink-50 text-fuchsia-600 border-fuchsia-200 shadow-sm shadow-fuchsia-100/20',
+  Trabalho: 'bg-slate-50/50 text-slate-400 border-slate-200 hover:bg-white hover:shadow-sm',
+  Folga: 'bg-gradient-to-br from-amber-400 to-orange-500 text-white border-white/20 shadow-lg shadow-orange-500/20 ring-1 ring-white/10',
+  Férias: 'bg-gradient-to-br from-emerald-400 to-teal-600 text-white border-white/20 shadow-lg shadow-emerald-500/20 ring-1 ring-white/10',
+  'Gozo Feriado': 'bg-gradient-to-br from-rose-400 to-red-600 text-white border-white/20 shadow-lg shadow-rose-500/20 ring-1 ring-white/10',
+  'Visita Guiada': 'bg-gradient-to-br from-indigo-400 to-violet-600 text-white border-white/20 shadow-lg shadow-indigo-500/20 ring-1 ring-white/10',
+  Feira: 'bg-gradient-to-br from-orange-400 to-yellow-600 text-white border-white/20 shadow-lg shadow-orange-500/20 ring-1 ring-white/10',
+  Formação: 'bg-gradient-to-br from-blue-400 to-indigo-600 text-white border-white/20 shadow-lg shadow-blue-500/20 ring-1 ring-white/10',
+  'Serviço Externo': 'bg-gradient-to-br from-slate-500 to-slate-700 text-white border-white/20 shadow-lg shadow-slate-500/20 ring-1 ring-white/10',
+  'Baixa Médica': 'bg-gradient-to-br from-red-500 to-rose-700 text-white border-white/20 shadow-lg shadow-red-500/20 ring-1 ring-white/10',
+  'Trabalhador-Estudante': 'bg-gradient-to-br from-lime-400 to-green-600 text-white border-white/20 shadow-lg shadow-lime-500/20 ring-1 ring-white/10',
+  'Consulta Médica': 'bg-gradient-to-br from-cyan-400 to-sky-600 text-white border-white/20 shadow-lg shadow-cyan-500/20 ring-1 ring-white/10',
+  'Banco de Horas': 'bg-gradient-to-br from-yellow-300 to-amber-500 text-white border-white/20 shadow-lg shadow-yellow-500/20 ring-1 ring-white/10',
+  'Tolerância de Ponto': 'bg-gradient-to-br from-fuchsia-400 to-pink-600 text-white border-white/20 shadow-lg shadow-fuchsia-500/20 ring-1 ring-white/10',
 };
 
 const MEMBER_HOURS: Record<string, { am: string; pm: string }> = {
@@ -98,8 +96,6 @@ export default function ScheduleApp() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLocked, setIsLocked] = useState(false);
   const [history, setHistory] = useState<Record<string, any>[]>([]);
-
-  // Estados do Modal de Notas (Declarados apenas uma vez aqui no topo)
   const [noteModal, setNoteModal] = useState<{ show: boolean; member: string; day: number; type: AbsenceType } | null>(null);
   const [tempNote, setTempNote] = useState('');
 
@@ -138,39 +134,47 @@ export default function ScheduleApp() {
 
   const toggleDayStatus = (member: string, day: number) => {
     if (isLocked) { showToast('Escala bloqueada!', 'error'); return; }
-    setHistory((prev) => [scheduleData, ...prev.slice(0, 19)]);
-
+    
     const m = String(currentMonth + 1).padStart(2, '0');
     const d = String(day).padStart(2, '0');
     const key = `${member}-2026-${m}-${d}`;
-    const newDocs = { ...scheduleData };
-    const current = newDocs[key];
+    const current = scheduleData[key];
+    const currentType = typeof current === 'object' && current !== null ? current.type : (current || 'Trabalho');
 
+    setHistory((prev) => [scheduleData, ...prev.slice(0, 19)]);
+    const newDocs = { ...scheduleData };
     const typesWithNotes: AbsenceType[] = ['Banco de Horas', 'Tolerância de Ponto', 'Gozo Feriado', 'Visita Guiada', 'Feira', 'Formação', 'Serviço Externo'];
 
     if (selectedType === 'Consulta Médica' || selectedType === 'Trabalhador-Estudante') {
-      if (!current || (typeof current === 'object' && current.type !== selectedType)) {
+      if (currentType !== selectedType) {
         newDocs[key] = { type: selectedType, period: 'Morning' };
       } else if (typeof current === 'object' && current.period === 'Morning') {
         newDocs[key] = { type: selectedType, period: 'Afternoon' };
       } else if (typeof current === 'object' && current.period === 'Afternoon') {
         newDocs[key] = { type: selectedType, period: 'Full' };
-      } else { delete newDocs[key]; }
+      } else { 
+        delete newDocs[key]; 
+      }
     } 
     else if (typesWithNotes.includes(selectedType)) {
-      const currentType = typeof current === 'object' ? current.type : current;
-      if (current && currentType === selectedType) { delete newDocs[key]; } 
-      else {
-        setTempNote(typeof current === 'object' ? current.note || '' : '');
+      if (currentType === selectedType) {
+         setTempNote(current.note || '');
+         setNoteModal({ show: true, member, day, type: selectedType });
+         return;
+      } else {
+        setTempNote('');
         setNoteModal({ show: true, member, day, type: selectedType });
         return;
       }
     } 
     else {
-      const currentType = typeof current === 'object' ? current.type : current;
-      if (current && currentType === selectedType) { delete newDocs[key]; } 
-      else { newDocs[key] = selectedType; }
+      if (currentType === selectedType) {
+        delete newDocs[key];
+      } else {
+        newDocs[key] = selectedType;
+      }
     }
+
     setScheduleData(newDocs);
     saveToFirebase(newDocs);
   };
@@ -238,7 +242,8 @@ export default function ScheduleApp() {
         const start = MEMBER_HOURS[m]?.am.split('-')[0];
         if (groupsByTime[start]) groupsByTime[start].push(m);
       });
-      return { day, totalPresent: currentTotalPresent, isShort: currentTotalPresent < 3, groupsByTime };
+      const hasShortShift = Object.values(groupsByTime).some(members => members.length < 2);
+      return { day, totalPresent: currentTotalPresent, isShort: currentTotalPresent < 3 || hasShortShift, groupsByTime };
     });
   }, [daysArray, scheduleData]);
 
@@ -247,37 +252,43 @@ export default function ScheduleApp() {
   }, [searchTerm]);
 
   return (
-    <div className="flex h-screen bg-[#F8FAFC] text-slate-900 font-sans overflow-hidden">
-      {/* MODAL PARA NOTAS / MOTIVOS */}
+    <div className="flex h-screen bg-[#F0F4F8] text-slate-900 font-sans overflow-hidden">
       <AnimatePresence>
         {noteModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/40 backdrop-blur-sm p-4">
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-10">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-10 border border-slate-100">
               <h3 className="text-2xl font-black mb-2 text-slate-800 tracking-tight">Motivo / Detalhe</h3>
               <p className="text-slate-500 text-sm mb-6 font-bold">{ABSENCE_CONFIG[noteModal.type].label} para {noteModal.member}</p>
               <textarea
                 autoFocus
-                className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-5 text-sm font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all mb-6"
-                
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-5 text-sm font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all mb-6 shadow-inner"
                 rows={3}
+                placeholder="Escreva o detalhe aqui..."
                 value={tempNote}
                 onChange={(e) => setTempNote(e.target.value)}
               />
               <div className="flex gap-3">
-                <button onClick={() => setNoteModal(null)} className="flex-1 py-4 rounded-xl text-slate-500 font-black uppercase text-xs hover:bg-slate-100 transition-all">Cancelar</button>
+                <button onClick={() => setNoteModal(null)} className="flex-1 py-4 rounded-xl text-slate-500 font-black uppercase text-xs hover:bg-slate-100 transition-all">Fechar</button>
                 <button
                   onClick={() => {
                     const m = String(currentMonth + 1).padStart(2, '0');
                     const d = String(noteModal.day).padStart(2, '0');
                     const key = `${noteModal.member}-2026-${m}-${d}`;
-                    const newData = { ...scheduleData, [key]: { type: noteModal.type, period: 'Full', note: tempNote } };
-                    setScheduleData(newData);
-                    saveToFirebase(newData);
+                    if (tempNote.trim() === '') {
+                        const newDocs = { ...scheduleData };
+                        delete newDocs[key];
+                        setScheduleData(newDocs);
+                        saveToFirebase(newDocs);
+                    } else {
+                        const newData = { ...scheduleData, [key]: { type: noteModal.type, period: 'Full', note: tempNote } };
+                        setScheduleData(newData);
+                        saveToFirebase(newData);
+                    }
                     setNoteModal(null);
                   }}
                   className="flex-1 py-4 bg-slate-900 text-white rounded-xl font-black uppercase text-xs shadow-lg hover:bg-slate-800 transition-all"
                 >
-                  Confirmar
+                  Salvar
                 </button>
               </div>
             </motion.div>
@@ -285,7 +296,6 @@ export default function ScheduleApp() {
         )}
       </AnimatePresence>
 
-      {/* TOAST NOTIFICATION */}
       <AnimatePresence>
         {toast.show && (
           <motion.div initial={{ y: -100, x: '-50%', opacity: 0 }} animate={{ y: 24, x: '-50%', opacity: 1 }} exit={{ y: -100, x: '-50%', opacity: 0 }} className="fixed left-1/2 z-[1000]">
@@ -297,7 +307,6 @@ export default function ScheduleApp() {
         )}
       </AnimatePresence>
 
-      {/* DETALHES MODAL */}
       <AnimatePresence>
         {selectedDayDetails && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
@@ -330,98 +339,92 @@ export default function ScheduleApp() {
         )}
       </AnimatePresence>
 
-      {/* SIDEBAR */}
       {!isPrintMode && (
-        <aside className="w-[340px] bg-white border-r border-slate-200 flex flex-col z-20 shadow-[10px_0_30px_-15px_rgba(0,0,0,0.05)]">
-          <div className="p-10 border-b border-slate-100 bg-gradient-to-b from-slate-50/50 to-transparent">
-            <motion.img initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} src="https://i.imgur.com/REOtXYt.png" alt="Logo" className="h-28 mb-8 object-contain drop-shadow-sm" />
-            <div className="flex items-center gap-2.5 mb-2">
-              <div className="w-5 h-5 bg-blue-600 rounded-md flex items-center justify-center"><ShieldCheck size={12} className="text-white" /></div>
-              <h1 className="text-[11px] font-black text-blue-600 uppercase tracking-[0.25em]">Escalas 2026</h1>
+        <aside className="w-[340px] bg-[#0F172A] border-r border-white/5 flex flex-col z-20 shadow-[20px_0_40px_-20px_rgba(0,0,0,0.6)]">
+          <div className="p-10 border-b border-white/5 bg-slate-900/50 relative overflow-hidden">
+             <div className="bg-white/5 p-4 rounded-[2rem] mb-8 flex justify-center backdrop-blur-md border border-white/10 shadow-2xl relative">
+                <motion.img initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} src="https://i.imgur.com/REOtXYt.png" alt="Logo" className="h-24 object-contain brightness-0 invert drop-shadow-2xl" />
             </div>
-            <p className="text-xl font-black text-slate-900 leading-tight tracking-tight">Divisão de Economia e Turismo</p>
+            <div className="flex items-center gap-2.5 mb-2 relative">
+              <div className="w-5 h-5 bg-blue-500 rounded-md flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.6)]"><ShieldCheck size={12} className="text-white" /></div>
+              <h1 className="text-[11px] font-black text-blue-400 uppercase tracking-[0.3em]">Escalas 2026</h1>
+            </div>
+            <p className="text-xl font-black text-white leading-tight tracking-tight relative uppercase">Divisão de Economia e Turismo</p>
           </div>
-          <div className="flex-1 overflow-y-auto p-10 space-y-10 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-10 space-y-10 custom-scrollbar-dark">
             <div className="relative group">
-              <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors"><Search size={16} /></div>
-              <input type="text" placeholder="Procurar colaborador..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-5 text-sm font-bold text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all shadow-sm" />
+              <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-slate-500 group-focus-within:text-blue-400 transition-colors"><Search size={16} /></div>
+              <input type="text" placeholder="Procurar colaborador..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-5 text-sm font-bold text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all hover:bg-white/10" />
             </div>
             <section>
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2.5 mb-6"><MousePointer2 size={14} className="text-blue-500" /> Pincel de Edição</h3>
-              <div className="grid grid-cols-1 gap-2.5">
+              <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.25em] flex items-center gap-2.5 mb-6"><MousePointer2 size={14} className="text-blue-500" /> Pincel de Edição</h3>
+              <div className="grid grid-cols-1 gap-3">
                 {(Object.keys(ABSENCE_CONFIG) as AbsenceType[]).map((type) => (
-                  <motion.button key={type} whileHover={{ x: 4 }} whileTap={{ scale: 0.98 }} onClick={() => setSelectedType(type)} className={`flex items-center justify-between p-5 rounded-[1.5rem] border transition-all duration-300 ${selectedType === type ? 'bg-slate-900 border-slate-900 text-white shadow-xl' : 'bg-slate-50 border-transparent text-slate-500 hover:bg-slate-100/80 hover:border-slate-200'}`}>
-                    <div className="flex items-center gap-4">
-                      <div className={`w-2.5 h-2.5 rounded-full ${COLORS[type].split(' ')[0]} border border-white/20`} />
-                      <span className="text-[12px] font-bold tracking-tight">{ABSENCE_CONFIG[type].label}</span>
+                  <motion.button key={type} whileHover={{ x: 6, scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => setSelectedType(type)} className={`flex items-center justify-between p-4 rounded-[1.4rem] border transition-all duration-300 relative overflow-hidden ${selectedType === type ? COLORS[type] + ' border-white/30 ring-1 ring-white/20 shadow-xl' : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'}`}>
+                    <div className="flex items-center gap-4 relative z-10">
+                      <div className={`w-3.5 h-3.5 rounded-full border-2 border-white/30 ${COLORS[type].split(' ')[0]}`} />
+                      <span className="text-[11px] font-black tracking-widest uppercase">{ABSENCE_CONFIG[type].label}</span>
                     </div>
                   </motion.button>
                 ))}
               </div>
             </section>
-            <div className="p-7 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
-              <p className="text-sm font-bold leading-relaxed mb-4 relative z-10">Selecione uma categoria acima e &quot;pinte&quot; o calendário com um clique.</p>
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest bg-white/20 w-fit px-3 py-1.5 rounded-full relative z-10"><TrendingUp size={12} /> Sugestão Ativa</div>
-            </div>
           </div>
         </aside>
       )}
 
-      {/* MAIN CONTENT */}
-      <main className="flex-1 flex flex-col min-w-0 bg-[#F8FAFC]">
-        <header className="px-12 py-8 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 flex justify-between items-center sticky top-0 z-30">
+      <main className="flex-1 flex flex-col min-w-0 bg-[#F1F5F9]">
+        <header className="px-12 py-8 bg-white/80 backdrop-blur-2xl border-b border-slate-200 flex justify-between items-center sticky top-0 z-30 shadow-sm">
           <div className="flex items-center gap-6">
-            <div className="bg-slate-100/80 p-1.5 rounded-[1.5rem] flex items-center shadow-inner border border-slate-200/50">
-              <button onClick={() => setCurrentMonth((p) => Math.max(0, p - 1))} className="p-3 hover:bg-white rounded-xl text-slate-600"><ChevronLeft size={20} /></button>
+            <div className="bg-slate-200/50 p-1.5 rounded-[1.8rem] flex items-center shadow-inner border border-slate-300/30">
+              <button onClick={() => setCurrentMonth((p) => Math.max(0, p - 1))} className="p-3 hover:bg-white hover:shadow-md rounded-xl text-slate-600 transition-all"><ChevronLeft size={20} /></button>
               <h2 className="text-xl font-black text-slate-800 w-56 text-center uppercase tracking-tighter">{MONTHS[currentMonth]} <span className="text-blue-600">{year}</span></h2>
-              <button onClick={() => setCurrentMonth((p) => Math.min(11, p + 1))} className="p-3 hover:bg-white rounded-xl text-slate-600"><ChevronRight size={20} /></button>
+              <button onClick={() => setCurrentMonth((p) => Math.min(11, p + 1))} className="p-3 hover:bg-white hover:shadow-md rounded-xl text-slate-600 transition-all"><ChevronRight size={20} /></button>
             </div>
             {!isPrintMode && (
-              <div className="flex items-center gap-2 bg-slate-100/50 p-1.5 rounded-2xl border border-slate-200/30">
-                <button onClick={handleUndo} disabled={history.length === 0} className={`p-3 rounded-xl ${history.length > 0 ? 'text-slate-700 hover:bg-white' : 'text-slate-300'}`}><Undo2 size={18} /></button>
-                <div className="w-[1px] h-6 bg-slate-200 mx-1" />
-                <button onClick={() => setIsLocked(!isLocked)} className={`p-3 rounded-xl ${isLocked ? 'bg-amber-100 text-amber-600' : 'text-slate-700 hover:bg-white'}`}>{isLocked ? <Lock size={18} /> : <Unlock size={18} />}</button>
+              <div className="flex items-center gap-2 bg-slate-200/40 p-1.5 rounded-2xl border border-slate-300/20">
+                <button onClick={handleUndo} disabled={history.length === 0} className={`p-3 rounded-xl transition-all ${history.length > 0 ? 'text-slate-700 hover:bg-white hover:shadow-sm' : 'text-slate-300'}`}><Undo2 size={18} /></button>
+                <div className="w-[1px] h-6 bg-slate-300 mx-1" />
+                <button onClick={() => setIsLocked(!isLocked)} className={`p-3 rounded-xl transition-all ${isLocked ? 'bg-amber-100 text-amber-600 shadow-sm' : 'text-slate-700 hover:bg-white hover:shadow-sm'}`}>{isLocked ? <Lock size={18} /> : <Unlock size={18} />}</button>
               </div>
             )}
           </div>
-          <div className="flex items-center gap-4">
-            <button onClick={() => setIsPrintMode(!isPrintMode)} className={`flex items-center gap-3 px-8 py-4 rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.1em] shadow-lg transition-all ${isPrintMode ? 'bg-rose-500 text-white shadow-rose-200' : 'bg-slate-900 text-white shadow-slate-200 hover:bg-slate-800'}`}>
-              {isPrintMode ? <><Eye size={18} /> Modo Edição</> : <><Printer size={18} /> Visualização Limpa</>}
-            </button>
-          </div>
+          <button onClick={() => setIsPrintMode(!isPrintMode)} className={`flex items-center gap-3 px-8 py-4 rounded-[1.8rem] text-[11px] font-black uppercase tracking-[0.15em] shadow-xl transition-all hover:scale-105 active:scale-95 ${isPrintMode ? 'bg-rose-500 text-white shadow-rose-500/30' : 'bg-slate-900 text-white shadow-slate-900/20 hover:bg-slate-800'}`}>
+            {isPrintMode ? <><Eye size={18} /> Modo Edição</> : <><Printer size={18} /> Visualização Limpa</>}
+          </button>
         </header>
 
         <div className="flex-1 p-10 pt-6 overflow-hidden flex flex-col">
-          <motion.div layout className="bg-white flex-1 rounded-[3.5rem] border border-slate-200/60 shadow-xl overflow-hidden flex flex-col">
+          <motion.div layout className="bg-white flex-1 rounded-[3.5rem] border border-slate-300/80 shadow-[0_40px_80px_-20px_rgba(15,23,42,0.15)] overflow-hidden flex flex-col">
             <div className="overflow-x-auto flex-1 flex flex-col custom-scrollbar">
               <table className="w-full border-separate border-spacing-0 flex-1 flex flex-col">
-                <thead className="sticky top-0 z-40 bg-slate-900">
+                <thead className="sticky top-0 z-40 bg-slate-900 shadow-2xl">
                   <tr className="flex w-full">
-                    <th className="w-60 min-w-[15rem] p-7 text-left"><span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Colaboradores</span></th>
+                    <th className="w-60 min-w-[15rem] p-8 text-left sticky left-0 bg-slate-900 z-50 border-r border-white/20">
+                      <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Colaboradores</span>
+                    </th>
                     {daysArray.map((day) => {
                       const date = new Date(year, currentMonth, day);
                       const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                      const isToday = isThisMonth && day === currentDayNumber;
                       return (
-                        <th key={day} className={`flex-1 min-w-[36px] py-5 text-center transition-colors relative ${isWeekend ? 'bg-slate-800/40' : ''}`}>
-                          <div className={`text-sm font-black ${isToday ? 'text-blue-400' : 'text-slate-200'}`}>{day}</div>
-                          <div className={`text-[9px] font-bold uppercase ${isToday ? 'text-blue-500' : 'text-slate-600'}`}>{['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][date.getDay()]}</div>
-                          {isToday && <div className="absolute bottom-0 left-0 w-full h-1 bg-blue-500"></div>}
+                        <th key={day} className={`flex-1 min-w-[42px] py-6 text-center relative border-r border-white/20 transition-colors ${isWeekend ? 'bg-white/5' : ''}`}>
+                          <div className={`text-sm font-black ${isWeekend ? 'text-rose-400' : 'text-slate-200'}`}>{day}</div>
+                          <div className={`text-[9px] font-black uppercase tracking-tighter ${isWeekend ? 'text-rose-600/60' : 'text-slate-600'}`}>{['D', 'S', 'T', 'Q', 'Q', 'S', 'S'][date.getDay()]}</div>
                         </th>
                       );
                     })}
-                    <th className="w-16 p-2 flex items-center justify-center bg-slate-900"><BarChart3 size={16} className="text-slate-600" /></th>
+                    <th className="w-16 p-2 flex items-center justify-center bg-slate-900"><BarChart3 size={16} className="text-slate-700" /></th>
                   </tr>
                 </thead>
-                <tbody className="flex-1 overflow-y-auto divide-y divide-slate-100 custom-scrollbar">
+                <tbody className="flex-1 overflow-y-auto divide-y divide-slate-200 custom-scrollbar">
                   {filteredMembers.map((member) => (
-                    <tr key={member} className="group flex w-full h-[calc(100%/13.5)] min-h-[48px] hover:bg-slate-50/60">
-                      <td className="w-60 min-w-[15rem] px-7 border-r border-slate-50 flex items-center justify-between sticky left-0 bg-white z-10 group-hover:bg-slate-50/50">
-                        <span className="text-[12px] font-bold text-slate-700 tracking-tight">{member}</span>
+                    <tr key={member} className="group flex w-full h-[calc(100%/13.5)] min-h-[64px] hover:bg-blue-50/50 transition-colors">
+                      <td className="w-60 min-w-[15rem] px-8 border-r border-slate-300 flex items-center justify-between sticky left-0 bg-white/95 backdrop-blur-md z-10 shadow-[4px_0_10px_-5px_rgba(0,0,0,0.05)]">
+                        <span className="text-[13px] font-black text-slate-700 tracking-tight uppercase">{member}</span>
                         {!isPrintMode && (
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                            <button onClick={() => copyMemberSchedule(member)} className="p-2 hover:bg-blue-50 rounded-xl text-slate-300 hover:text-blue-600 transition-colors"><ClipboardPaste size={14} className="rotate-180" /></button>
-                            {clipboardData && <button onClick={() => pasteMemberSchedule(member)} className="p-2 hover:bg-emerald-50 rounded-xl text-emerald-600 transition-colors"><ClipboardPaste size={14} /></button>}
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                            <button onClick={() => copyMemberSchedule(member)} className="p-2 hover:bg-blue-100 rounded-xl text-slate-400 hover:text-blue-600 transition-colors"><ClipboardPaste size={14} className="rotate-180" /></button>
+                            {clipboardData && <button onClick={() => pasteMemberSchedule(member)} className="p-2 hover:bg-emerald-100 rounded-xl text-emerald-600 transition-colors"><ClipboardPaste size={14} /></button>}
                           </div>
                         )}
                       </td>
@@ -432,38 +435,57 @@ export default function ScheduleApp() {
                         const type = typeof rawStatus === 'object' && rawStatus !== null ? rawStatus.type : (rawStatus || 'Trabalho');
                         const period = typeof rawStatus === 'object' && rawStatus !== null ? rawStatus.period : 'Full';
                         const note = typeof rawStatus === 'object' && rawStatus !== null ? rawStatus.note : null;
-                        const isToday = isThisMonth && day === currentDayNumber;
-                        const isHighlighted = !highlightFilter || highlightFilter === type;
+                        const isWeekend = new Date(year, currentMonth, day).getDay() % 6 === 0;
 
                         return (
-                          <td key={day} onClick={() => !isPrintMode && toggleDayStatus(member, day)} className={`flex-1 min-w-[36px] p-[3px] border-r border-slate-50 cursor-pointer relative ${isToday ? 'bg-blue-50/20' : ''}`}>
+                          <td key={day} onClick={() => toggleDayStatus(member, day)} className={`flex-1 min-w-[42px] p-2 border-r border-slate-200 cursor-pointer relative group/cell ${isWeekend ? 'bg-slate-50/80' : ''}`}>
                             <motion.div
-                              whileHover={!isPrintMode && !isLocked ? { scale: 1.05, zIndex: 10 } : {}}
-                              className={`h-full flex items-center justify-center text-[10px] font-black border transition-all duration-300 relative overflow-hidden ${type !== 'Trabalho' ? COLORS[type as AbsenceType] : 'bg-transparent border-transparent'} ${!isHighlighted ? 'opacity-5 scale-[0.85] grayscale' : 'opacity-100'} ${period === 'Morning' ? 'w-[65%] mr-auto rounded-l-xl rounded-r-none' : period === 'Afternoon' ? 'w-[65%] ml-auto rounded-r-xl rounded-l-none' : 'w-full rounded-xl'}`}
-                              title={note ? `Nota: ${note}` : ABSENCE_CONFIG[type as AbsenceType]?.label}
+                              whileHover={!isPrintMode && !isLocked ? { scale: 1.05, y: -1, zIndex: 10 } : {}}
+                              className={`h-full flex items-center justify-center text-[10px] font-black border-2 transition-all duration-300 relative ${type !== 'Trabalho' ? COLORS[type as AbsenceType] : 'bg-transparent border-transparent'} ${period === 'Morning' ? 'w-[65%] mr-auto rounded-xl rounded-r-none' : period === 'Afternoon' ? 'w-[65%] ml-auto rounded-xl rounded-l-none' : 'w-full rounded-xl'}`}
                             >
                               {type !== 'Trabalho' ? ABSENCE_CONFIG[type as AbsenceType].short : ''}
-                              {note && <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-current opacity-30 rounded-bl-full" />}
+                              {note && (
+                                <div className="absolute top-0.5 right-0.5">
+                                  <div className="w-0 h-0 border-t-[8px] border-l-[8px] border-t-white/80 border-l-transparent rounded-tr-sm" />
+                                </div>
+                              )}
+                              {note && (
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-4 bg-slate-900 text-white text-[11px] font-bold rounded-2xl shadow-2xl opacity-0 group-hover/cell:opacity-100 pointer-events-none transition-all z-[100] border border-white/10 backdrop-blur-md">
+                                  <div className="flex items-center gap-2 mb-2 text-blue-400 border-b border-white/10 pb-1">
+                                    <MessageSquare size={12} />
+                                    <span className="uppercase tracking-[0.2em] text-[8px]">Nota de Escala</span>
+                                  </div>
+                                  {note}
+                                  <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-r-[8px] border-t-[8px] border-l-transparent border-r-transparent border-t-slate-900" />
+                                </div>
+                              )}
                             </motion.div>
                           </td>
                         );
                       })}
-                      <td className="w-16 border-l border-slate-100 flex items-center justify-center font-black text-[11px] text-slate-400">{daysArray.reduce((acc, d) => (getStatus(member, d) !== 'Trabalho' ? acc + 1 : acc), 0)}</td>
+                      <td className="w-16 border-l border-slate-300 flex items-center justify-center font-black text-[12px] text-slate-600 bg-slate-50/80">{daysArray.reduce((acc, d) => (getStatus(member, d) !== 'Trabalho' ? acc + 1 : acc), 0)}</td>
                     </tr>
                   ))}
                 </tbody>
-                <tfoot className="sticky bottom-0 z-40 bg-slate-50/90 backdrop-blur-md border-t-2 border-slate-200">
-                  <tr className="flex w-full h-16">
-                    <td className="w-60 min-w-[15rem] p-5 bg-slate-100 border-r border-slate-200 flex items-center gap-4">
-                      <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-slate-200/50"><Users size={18} className="text-blue-600" /></div>
-                      <span className="text-[11px] font-black text-slate-700 uppercase tracking-widest">Cobertura</span>
+                <tfoot className="sticky bottom-0 z-40 bg-white/95 backdrop-blur-xl border-t-4 border-slate-900 shadow-[0_-15px_40px_rgba(0,0,0,0.1)]">
+                  <tr className="flex w-full h-24">
+                    <td className="w-60 min-w-[15rem] p-6 border-r border-slate-300 flex items-center gap-5 bg-slate-50/90 shadow-[4px_0_10px_-5px_rgba(0,0,0,0.05)]">
+                      <div className="w-14 h-14 bg-white rounded-3xl flex items-center justify-center shadow-xl border border-slate-200"><Users size={24} className="text-blue-600" /></div>
+                      <div>
+                         <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] block">Equipa em</span>
+                         <span className="text-[12px] font-black text-slate-900 uppercase tracking-[0.1em]">Cobertura</span>
+                      </div>
                     </td>
                     {dailyAnalysis.map((data, idx) => (
-                      <td key={idx} onClick={() => setSelectedDayDetails(data)} className={`flex-1 min-w-[36px] flex flex-col items-center justify-center border-r border-slate-100 cursor-pointer hover:bg-white transition-all ${data.isShort ? 'bg-rose-50/50 text-rose-600 animate-pulse' : 'text-slate-700'}`}>
-                        <span className="text-sm font-black">{data.totalPresent}</span>
+                      <td key={idx} onClick={() => setSelectedDayDetails(data)} className={`flex-1 min-w-[42px] flex items-center justify-center border-r border-slate-300 cursor-pointer hover:bg-white transition-all group ${data.isShort ? 'bg-rose-50/60' : 'text-slate-800'}`}>
+                        <div className="flex flex-col items-center gap-1 group-hover:scale-110 transition-transform">
+                           {data.isShort ? <AlertCircle size={16} className="text-rose-500 mb-0.5 animate-pulse" /> : null}
+                           <span className={`text-[15px] font-black tracking-tighter ${data.isShort ? 'text-rose-600' : 'text-slate-900'}`}>{data.totalPresent}</span>
+                           <div className={`w-4 h-1 rounded-full ${data.isShort ? 'bg-rose-400 shadow-[0_0_8px_rgba(244,63,94,0.4)]' : 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.3)]'}`} />
+                        </div>
                       </td>
                     ))}
-                    <td className="w-16 bg-slate-100"></td>
+                    <td className="w-16 bg-slate-50/90 shadow-[-4px_0_10px_-5px_rgba(0,0,0,0.05)]"></td>
                   </tr>
                 </tfoot>
               </table>
@@ -471,33 +493,27 @@ export default function ScheduleApp() {
           </motion.div>
         </div>
 
-        {/* FILTROS FOOTER */}
         {!isPrintMode && (
-          <div className="px-12 py-6 bg-white border-t border-slate-200/60 flex items-center justify-between">
-            <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap mr-2">Filtros:</span>
-              <div className="flex gap-2">
-                {(Object.keys(ABSENCE_CONFIG) as AbsenceType[]).map((type) => {
-                  const isActive = highlightFilter === type;
-                  return (
-                    <button key={type} onClick={() => setHighlightFilter(isActive ? null : type)} className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl border transition-all whitespace-nowrap ${isActive ? 'bg-slate-900 border-slate-900 text-white shadow-xl' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'}`}>
-                      <div className={`w-2 h-2 rounded-full ${COLORS[type].split(' ')[0]}`} />
-                      <span className="text-[11px] font-bold tracking-tight">{ABSENCE_CONFIG[type].label}</span>
-                    </button>
-                  );
-                })}
-              </div>
+          <div className="px-12 py-8 bg-[#0F172A] border-t border-white/10 relative overflow-hidden">
+            <div className="flex flex-wrap items-center gap-4 relative z-10">
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] whitespace-nowrap mr-6">Filtros de Exibição</span>
+              {(Object.keys(ABSENCE_CONFIG) as AbsenceType[]).map((type) => (
+                <button key={type} onClick={() => setHighlightFilter(highlightFilter === type ? null : type)} className={`flex items-center gap-3 px-6 py-3.5 rounded-2xl border transition-all ${highlightFilter === type ? COLORS[type] + ' border-white/40 shadow-lg ring-1 ring-white/20' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-white'}`}>
+                  <div className={`w-3 h-3 rounded-full ${COLORS[type].split(' ')[0]}`} />
+                  <span className="text-[10px] font-black tracking-[0.15em] uppercase whitespace-nowrap">{ABSENCE_CONFIG[type].label}</span>
+                </button>
+              ))}
             </div>
           </div>
         )}
       </main>
 
       <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 20px; border: 2px solid white; }
+        .custom-scrollbar-dark::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar-dark::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 20px; }
+        table { border-collapse: separate !important; }
       `}</style>
     </div>
   );
