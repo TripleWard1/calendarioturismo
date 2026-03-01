@@ -175,9 +175,9 @@ export default function ScheduleApp() {
     
     // 1. Se o tipo for Consulta ou Estudante, fazemos o ciclo: Manhã -> Tarde -> Inteiro -> Apagar
     if (selectedType === 'Consulta Médica' || selectedType === 'Trabalhador-Estudante') {
-      if (!current || (typeof current === 'object' && current.type !== selectedType)) {
+      if (!current || (typeof current === 'object' && (current as any).type !== selectedType)) {
         newDocs[key] = { type: selectedType, period: 'Morning' } as any;
-      } else if (typeof current === 'object' && current.period === 'Morning') {
+      } else if (typeof current === 'object' && (current as any).period === 'Morning') {
         newDocs[key] = { type: selectedType, period: 'Afternoon' } as any;
       } else if (typeof current === 'object' && current.period === 'Afternoon') {
         newDocs[key] = { type: selectedType, period: 'Full' } as any;
@@ -280,7 +280,7 @@ export default function ScheduleApp() {
         groupsByTime,
       };
     });
-  }, [scheduleData, currentMonth]);
+  }, [scheduleData, currentMonth, daysArray, getStatus]); // Adicionámos estes dois últimos
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] text-slate-900 font-sans overflow-hidden">
