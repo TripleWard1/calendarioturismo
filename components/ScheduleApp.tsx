@@ -161,13 +161,19 @@ export default function ScheduleApp() {
     const d = String(day).padStart(2, '0');
     const key = `${member}-2026-${m}-${d}`;
     const newDocs = { ...scheduleData };
-    if (newDocs[key]) {
+
+    // --- MUDANÇA AQUI ---
+    // Se o que já lá está é IGUAL ao que tenho selecionado, então apago (volta a Trabalho)
+    if (newDocs[key] === selectedType) {
       delete newDocs[key];
     } else {
+      // Se for diferente ou se for Trabalho, pinta com o novo tipo
       newDocs[key] = selectedType;
     }
+    // --------------------
+
     setScheduleData(newDocs);
-    saveToFirebase(newDocs); // ATUALIZA FIREBASE
+    saveToFirebase(newDocs);
   };
 
   const handleUndo = () => {
@@ -443,7 +449,7 @@ export default function ScheduleApp() {
             <div className="p-7 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[2.5rem] text-white shadow-2xl shadow-blue-200/50 relative overflow-hidden group">
               <div className="relative z-10">
                 <p className="text-sm font-bold leading-relaxed mb-4">
-                  Selecione uma categoria acima e "pinte" o calendário com um
+                  Selecione uma categoria acima e &quot;pinte&quot; o calendário com um
                   clique.
                 </p>
                 <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest bg-white/20 w-fit px-3 py-1.5 rounded-full">
