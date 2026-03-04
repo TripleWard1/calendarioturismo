@@ -414,7 +414,7 @@ const [expandedGlobalDay, setExpandedGlobalDay] = useState<number | null>(null);
       if (e.key === 'Escape') close();
     };
   
-    // scroll em qualquer container (capture=true)
+    // scroll em qualquer container. (capture=true)
     window.addEventListener('scroll', close, true);
     window.addEventListener('resize', close);
     window.addEventListener('pointerdown', close, true);
