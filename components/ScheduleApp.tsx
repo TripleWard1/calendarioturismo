@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
+import { usePathname } from 'next/navigation';
 
 import {
   TEAM_MEMBERS,
@@ -102,7 +103,9 @@ export default function ScheduleApp() {
   const [selectedDayDetails, setSelectedDayDetails] = useState<any | null>(null);
   const [toast, setToast] = useState<{ show: boolean; msg: string; type: 'success' | 'error' }>({ show: false, msg: '', type: 'success' });
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLocked, setIsLocked] = useState(false);
+  const pathname = usePathname();
+const isTeamView = pathname === '/equipa';
+  const [isLocked, setIsLocked] = useState(isTeamView);
   const [history, setHistory] = useState<Record<string, any>[]>([]);
   const [noteModal, setNoteModal] = useState<{ show: boolean; member: string; day: number; type: string; existingData?: any; editIndex?: number } | null>(null);
   const [tempNote, setTempNote] = useState('');
@@ -112,6 +115,7 @@ export default function ScheduleApp() {
   const [calendarView, setCalendarView] = useState<'ALL' | 'DYNAMICS' | 'LUIS' | 'TEAM'>('ALL');
   const [expandedLuisDay, setExpandedLuisDay] = useState<number | null>(null);
 const [expandedGlobalDay, setExpandedGlobalDay] = useState<number | null>(null);
+
     // ==========================
   // REVAMP (apenas Luís + GLOBAL) — colaboradores ficam iguais
   // ==========================
@@ -587,7 +591,7 @@ if (noteModal.member === 'Luís Ferreira' || noteModal.member === 'GLOBAL') {
         )}
       </AnimatePresence>
 
-      {!isPrintMode && (
+      {!isPrintMode && !isTeamView && (
         <aside className="w-[300px] bg-[#0F172A] border-r border-white/5 flex flex-col z-20 shadow-[20px_0_40px_-20px_rgba(0,0,0,0.6)] shrink-0">
           <div className="p-8 border-b border-white/5 bg-slate-900/50 relative overflow-hidden">
              <div className="bg-white/5 p-4 rounded-[2rem] mb-6 flex justify-center backdrop-blur-md border border-white/10 shadow-2xl relative">
@@ -636,7 +640,7 @@ if (noteModal.member === 'Luís Ferreira' || noteModal.member === 'GLOBAL') {
               <h2 className="text-base font-black text-slate-800 w-44 text-center uppercase tracking-tighter">{MONTHS[currentMonth]} <span className="text-blue-600">{year}</span></h2>
               <button onClick={() => setCurrentMonth((p) => Math.min(11, p + 1))} className="p-2 hover:bg-white hover:shadow-md rounded-xl text-slate-600 transition-all"><ChevronRight size={18} /></button>
             </div>
-            {!isPrintMode && (
+            {!isPrintMode && !isTeamView && (
               <div className="flex items-center gap-1.5 bg-slate-200/40 p-1 rounded-xl border border-slate-300/20">
                 <button onClick={handleUndo} disabled={history.length === 0} className={`p-2 rounded-lg transition-all ${history.length > 0 ? 'text-slate-700 hover:bg-white shadow-sm' : 'text-slate-300'}`}><Undo2 size={16} /></button>
                 <div className="w-[1px] h-5 bg-slate-300 mx-0.5" />
@@ -649,7 +653,7 @@ if (noteModal.member === 'Luís Ferreira' || noteModal.member === 'GLOBAL') {
           </button>
         </header>
 
-        {!isPrintMode && (
+        {!isPrintMode && !isTeamView && (
   <div className="flex items-center gap-1.5 bg-slate-200/40 p-1 rounded-2xl border border-slate-300/20">
     <button
       onClick={() => setCalendarView('ALL')}
@@ -867,7 +871,7 @@ if (noteModal.member === 'Luís Ferreira' || noteModal.member === 'GLOBAL') {
                        )}
                      </div>
                  
-                     {!isPrintMode && (
+                     {!isPrintMode && !isTeamView && (
                        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-all scale-90">
                          <button
                            onClick={(e) => { e.stopPropagation(); copyMemberSchedule(member); }}
@@ -1132,7 +1136,7 @@ if (noteModal.member === 'Luís Ferreira' || noteModal.member === 'GLOBAL') {
           </motion.div>
         </div>
 
-        {!isPrintMode && (
+        {!isPrintMode && !isTeamView && (
           <div className="px-10 py-4 bg-[#0F172A] border-t border-white/10 relative overflow-hidden shrink-0">
             <div className="flex flex-wrap items-center gap-3 relative z-10">
               <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mr-4">Filtros</span>
