@@ -355,6 +355,7 @@ const [expandedGlobalDay, setExpandedGlobalDay] = useState<number | null>(null);
   };
 
   const openLuisNew = (day: number) => {
+    if (isTeamView || isLocked) return;
     // abre modal para criar Agenda/Reunião sem usar pincel
     setTempNote('');
     setIsFullDay(false);
@@ -653,6 +654,23 @@ if (noteModal.member === 'Luís Ferreira' || noteModal.member === 'GLOBAL') {
           </button>
         </header>
 
+        {isTeamView && (
+  <div className="px-10 py-4 bg-white/80 backdrop-blur-xl border-b border-slate-200 shrink-0">
+    <div className="relative max-w-sm group">
+      <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+        <Search size={14} />
+      </div>
+      <input
+        type="text"
+        placeholder="Procurar colaborador..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full bg-slate-100 border border-slate-200 rounded-xl py-3 pl-10 pr-4 text-xs font-bold text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
+      />
+    </div>
+  </div>
+)}
+
         {!isPrintMode && !isTeamView && (
   <div className="flex items-center gap-1.5 bg-slate-200/40 p-1 rounded-2xl border border-slate-300/20">
     <button
@@ -693,7 +711,7 @@ if (noteModal.member === 'Luís Ferreira' || noteModal.member === 'GLOBAL') {
   </div>
 )}
 
-        <div className="flex-1 p-6 pt-4 overflow-hidden flex flex-col">
+<div className="flex-1 min-h-0 p-6 pt-4 overflow-hidden flex flex-col">
           <motion.div layout className="bg-white flex-1 rounded-[2.5rem] border border-slate-300/80 shadow-[0_40px_80px_-20px_rgba(15,23,42,0.1)] overflow-hidden flex flex-col relative">
           <div className="overflow-auto flex-1 custom-scrollbar">
   <table className="w-max min-w-max border-separate border-spacing-0 flex flex-col">
@@ -745,7 +763,7 @@ if (noteModal.member === 'Luís Ferreira' || noteModal.member === 'GLOBAL') {
             onClick={() => toggleDayStatus('GLOBAL', day)}
             className="flex-1 min-w-[100px] p-1 border-r border-slate-200 cursor-pointer hover:bg-purple-50 transition-all relative group/cell overflow-visible align-top"
           >
-            {!isPrintMode && hoverGlobalDay === day && (
+            {!isPrintMode && !isTeamView && hoverGlobalDay === day && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -907,7 +925,7 @@ if (noteModal.member === 'Luís Ferreira' || noteModal.member === 'GLOBAL') {
                             isWeekend ? 'bg-slate-50/80' : ''
                           }`}
                         >
-                          {!isPrintMode && hoverLuisDay === day && (
+                          {!isPrintMode && !isTeamView && hoverLuisDay === day && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -1136,23 +1154,42 @@ if (noteModal.member === 'Luís Ferreira' || noteModal.member === 'GLOBAL') {
           </motion.div>
         </div>
 
-        {!isPrintMode && !isTeamView && (
-          <div className="px-10 py-4 bg-[#0F172A] border-t border-white/10 relative overflow-hidden shrink-0">
-            <div className="flex flex-wrap items-center gap-3 relative z-10">
-              <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mr-4">Filtros</span>
-              <button onClick={() => setHighlightFilter(highlightFilter === 'Agenda / Reunião' ? null : 'Agenda / Reunião')} className={`px-4 py-2 rounded-xl border transition-all ${highlightFilter === 'Agenda / Reunião' ? COLORS['Agenda / Reunião'] : 'bg-white/5 border-white/10 text-slate-400'}`}>
-                <span className="text-[9px] font-black uppercase tracking-widest">💼 Reuniões</span>
-              </button>
-              <div className="w-[1px] h-6 bg-white/10 mx-1" />
-              {(Object.keys(ABSENCE_CONFIG) as AbsenceType[]).map((type) => (
-                <button key={type} onClick={() => setHighlightFilter(highlightFilter === type ? null : type)} className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${highlightFilter === type ? COLORS[type] + ' border-white/30 shadow-md ring-1 ring-white/10' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/5'}`}>
-                  <div className={`w-2 h-2 rounded-full ${COLORS[type].split(' ')[0]}`} />
-                  <span className="text-[9px] font-black tracking-[0.1em] uppercase whitespace-nowrap">{ABSENCE_CONFIG[type].label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {!isPrintMode && (
+  <div className="px-10 py-4 bg-[#0F172A] border-t border-white/10 relative overflow-hidden shrink-0 z-20">
+    <div className="flex flex-wrap items-center gap-3 relative z-10">
+      <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.4em] mr-4">Filtros</span>
+      <button
+        onClick={() => setHighlightFilter(highlightFilter === 'Agenda / Reunião' ? null : 'Agenda / Reunião')}
+        className={`px-4 py-2 rounded-xl border transition-all ${
+          highlightFilter === 'Agenda / Reunião'
+            ? COLORS['Agenda / Reunião']
+            : 'bg-white/5 border-white/10 text-slate-400'
+        }`}
+      >
+        <span className="text-[9px] font-black uppercase tracking-widest">💼 Reuniões</span>
+      </button>
+
+      <div className="w-[1px] h-6 bg-white/10 mx-1" />
+
+      {(Object.keys(ABSENCE_CONFIG) as AbsenceType[]).map((type) => (
+        <button
+          key={type}
+          onClick={() => setHighlightFilter(highlightFilter === type ? null : type)}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
+            highlightFilter === type
+              ? COLORS[type] + ' border-white/30 shadow-md ring-1 ring-white/10'
+              : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/5'
+          }`}
+        >
+          <div className={`w-2 h-2 rounded-full ${COLORS[type].split(' ')[0]}`} />
+          <span className="text-[9px] font-black tracking-[0.1em] uppercase whitespace-nowrap">
+            {ABSENCE_CONFIG[type].label}
+          </span>
+        </button>
+      ))}
+    </div>
+  </div>
+)}
       </main>
 
       <style jsx global>{`
